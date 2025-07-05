@@ -8,9 +8,12 @@ import asyncio
 import logging
 from dotenv import load_dotenv
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from keep_alive import keep_alive
 from bot.commands import setup_commands
+from bot.database import SimpleDB
+from bot.rank_tracker import RankTracker
+from bot.api_client import OpenDotaClient
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +37,61 @@ class DotaBot(commands.Bot):
             intents=intents,
             help_command=None
         )
+        
+        self.db = SimpleDB()
+        self.api_client = OpenDotaClient()
+        self.rank_tracker = RankTracker(self.db, self.api_client)
+    
+    @tasks.loop(minutes=30)  # Check every 30 minutes
+    async def check_rank_changes(self):
+        """Background task to check for rank changes"""
+        try:
+            logger.info("Checking for rank changes...")
+            
+            for guild in self.guilds:
+                try:
+                    # Get allowed channel for notifications
+                    allowed_channel_id = self.db.get_allowed_channel(guild.id)
+                    if not allowed_channel_id:
+                        continue
+                    
+                    notification_channel = guild.get_channel(allowed_channel_id)
+                    if not notification_channel:
+                        continue
+                    
+                    # Check for rank changes
+                    rank_changes = await self.rank_tracker.check_rank_changes(guild.id)
+                    
+                    for user_id, steam_id, old_mmr, new_mmr in rank_changes:
+                        try:
+                            message = self.rank_tracker.get_rank_change_message(user_id, old_mmr, new_mmr)
+                            
+                            embed = discord.Embed(
+                                title="🎮 Rank Change Detected!",
+                                description=message,
+                                color=discord.Color.gold() if new_mmr > old_mmr else discord.Color.orange()
+                            )
+                            
+                            await notification_channel.send(embed=embed)
+                            logger.info(f"Sent rank change notification for user {user_id} in guild {guild.id}")
+                            
+                        except Exception as e:
+                            logger.error(f"Error sending rank notification: {e}")
+                        
+                        # Add small delay to avoid rate limiting
+                        await asyncio.sleep(1)
+                
+                except Exception as e:
+                    logger.error(f"Error checking rank changes for guild {guild.id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error in rank checking task: {e}")
+    
+    @check_rank_changes.before_loop
+    async def before_rank_check(self):
+        """Wait until bot is ready before starting rank checks"""
+        await self.wait_until_ready()
+        logger.info("Starting rank change monitoring...")
     
     async def setup_hook(self):
         """Setup hook called when bot is starting"""
@@ -56,6 +114,10 @@ class DotaBot(commands.Bot):
         await self.change_presence(
             activity=discord.Game(name="Dota 2 Statistics | /dota")
         )
+        
+        # Start rank checking task
+        if not self.check_rank_changes.is_running():
+            self.check_rank_changes.start()
     
     async def on_command_error(self, ctx, error):
         """Global error handler"""

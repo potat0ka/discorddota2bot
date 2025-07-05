@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains a comprehensive Discord bot for fetching and displaying Dota 2 player statistics using the OpenDota API. The bot is built with Python and discord.py, featuring slash commands, player comparisons, hero streak detection, and 24/7 hosting capabilities through a Flask web server.
+This repository contains a comprehensive Discord bot for fetching and displaying Dota 2 player statistics using the OpenDota API. The bot is built with Python and discord.py, featuring slash commands, player comparisons, hero streak detection, channel-restricted access, user registration system, automated rank-up notifications, and 24/7 hosting capabilities through a Flask web server.
 
 ## System Architecture
 
@@ -31,9 +31,9 @@ This repository contains a comprehensive Discord bot for fetching and displaying
 - **Design**: Singleton-like session management for connection reuse
 
 ### 3. Command Handler (`bot/commands.py`)
-- **Purpose**: Implements Discord slash commands
-- **Commands**: `/dota`, `/compare`, `/help`
-- **Features**: Input validation, comprehensive error handling, user-friendly responses
+- **Purpose**: Implements Discord slash commands with channel restrictions
+- **Commands**: `/dota`, `/compare`, `/help`, `/set-channel`, `/register`, `/unregister`, `/list-registered`
+- **Features**: Input validation, comprehensive error handling, user-friendly responses, channel permission checks, admin controls
 
 ### 4. Data Processor (`bot/data_processor.py`)
 - **Purpose**: Processes and analyzes raw Dota 2 statistics
@@ -49,6 +49,16 @@ This repository contains a comprehensive Discord bot for fetching and displaying
 - **Purpose**: Maintains bot uptime on hosting platforms
 - **Features**: Flask web server, status page, health monitoring
 - **Architecture**: Threaded execution to run alongside Discord bot
+
+### 7. Database System (`bot/database.py`)
+- **Purpose**: Manages bot configuration and user data persistence
+- **Features**: JSON-based storage, channel permissions, user registration, admin management
+- **Design**: Thread-safe operations with file-based persistence
+
+### 8. Rank Tracking System (`bot/rank_tracker.py`)
+- **Purpose**: Monitors player rank changes and generates notifications
+- **Features**: MMR tracking, rank tier conversion, change detection, notification formatting
+- **Architecture**: Background monitoring with configurable check intervals
 
 ## Data Flow
 
@@ -98,7 +108,8 @@ This repository contains a comprehensive Discord bot for fetching and displaying
 
 ## Changelog
 - July 05, 2025. Initial setup
-- July 05, 2025. Added Docker deployment section to README.md with comprehensive instructions
+- July 05, 2025. Added Docker deployment section to README.md with comprehensive instructions  
+- July 05, 2025. Major feature enhancement: Added channel permission system, user registration, automated rank-up notifications, and admin controls. Bot now restricts commands to specific channels and monitors registered users for rank changes every 30 minutes.
 
 ## User Preferences
 
