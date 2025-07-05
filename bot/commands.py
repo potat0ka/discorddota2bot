@@ -97,8 +97,17 @@ class DotaCommands(commands.Cog):
             if not player_data:
                 embed = discord.Embed(
                     title="❌ Player Not Found",
-                    description=f"Could not find player with Friend ID: {friend_id}\n"
-                               "Please check the ID and try again.",
+                    description=f"Could not find player with Friend ID: {friend_id}\n\n"
+                               "**Possible reasons:**\n"
+                               "• Friend ID might be incorrect\n"
+                               "• Profile is private on Steam\n"
+                               "• Player hasn't played Dota 2 recently\n"
+                               "• Profile not linked to OpenDota\n\n"
+                               "**How to fix:**\n"
+                               "1. Double-check your Friend ID in Dota 2\n"
+                               "2. Make sure your Steam profile is public\n"
+                               "3. Play a match to sync with OpenDota\n"
+                               "4. Visit opendota.com and login with Steam",
                     color=discord.Color.red()
                 )
                 await interaction.followup.send(embed=embed)
@@ -283,7 +292,9 @@ class DotaCommands(commands.Cog):
             value="1. Open Dota 2\n"
                   "2. Go to your profile\n"
                   "3. Look for the Friend ID (8-9 digits)\n"
-                  "4. Example: 122994714",
+                  "4. Example: 122994714\n"
+                  "5. First make sure your Steam profile is public\n"
+                  "6. Play a match to sync with OpenDota",
             inline=False
         )
         
