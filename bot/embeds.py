@@ -72,12 +72,15 @@ class EmbedBuilder:
         rank_name = stats.get('rank_name', 'Unranked')
         current_mmr = stats.get('current_mmr', 0)
         
+        # Format MMR display
+        mmr_text = f"**MMR:** {current_mmr:,}" if current_mmr > 0 else "**MMR:** Unranked"
+        
         embed.add_field(
             name="📊 Overview",
             value=f"**Total Matches:** {total_matches:,}\n"
                   f"**Win Rate:** {win_rate:.1f}%\n"
                   f"**Rank:** {rank_name}\n"
-                  f"**MMR:** {current_mmr:,}" if current_mmr > 0 else f"**Rank:** {rank_name}",
+                  f"{mmr_text}",
             inline=True
         )
         
@@ -154,23 +157,6 @@ class EmbedBuilder:
                 value=f"**Hero:** {hero_name}\n"
                       f"**Win Rate:** {successful_hero.get('win_rate', 0)}%\n"
                       f"**Games:** {successful_hero.get('games', 0)}",
-                inline=True
-            )
-        
-        # Peak rank
-        peak_rank = stats.get('peak_rank', {})
-        if peak_rank and peak_rank.get('mmr', 0) > 0:
-            peak_mmr = peak_rank.get('mmr', 0)
-            peak_rank_name = peak_rank.get('rank_name', 'Unknown')
-            embed.add_field(
-                name="🏆 Peak Rank",
-                value=f"**{peak_rank_name}**\n**Peak MMR:** {peak_mmr:,}",
-                inline=True
-            )
-        else:
-            embed.add_field(
-                name="🏆 Peak Rank",
-                value="**No peak data available**",
                 inline=True
             )
         

@@ -301,6 +301,8 @@ class DataProcessor:
                 streak_results = [self._is_win(match, steam_id)]
 
         if streak_count >= 3:
+            # Reverse results to show newest match first (left to right)
+            streak_results.reverse()
             return {
                 'hero_id': current_hero,
                 'count': streak_count,
@@ -312,7 +314,7 @@ class DataProcessor:
     def _get_peak_rank(self, profile: Dict, current_mmr: int) -> Dict:
         """Get peak rank information"""
         # Try to get peak MMR from different sources
-        peak_mmr = 0
+        peak_mmr = current_mmr  # Start with current MMR as baseline
         
         # Check for leaderboard rank (Immortal players)
         if profile.get('leaderboard_rank'):
@@ -320,20 +322,20 @@ class DataProcessor:
         
         # Check solo competitive rank
         solo_rank = profile.get('solo_competitive_rank', 0)
-        if solo_rank:
+        if solo_rank and solo_rank > 0:
             peak_mmr = max(peak_mmr, solo_rank)
         
         # Check regular competitive rank
         comp_rank = profile.get('competitive_rank', 0)
-        if comp_rank:
+        if comp_rank and comp_rank > 0:
             peak_mmr = max(peak_mmr, comp_rank)
         
-        # Use current MMR as fallback
-        if peak_mmr == 0:
-            peak_mmr = current_mmr
-        
-        # Ensure peak is at least current MMR
-        peak_mmr = max(peak_mmr, current_mmr)
+        # Check rank tier and convert to approximate MMR
+        rank_tier = profile.get('rank_tier', 0)
+        if rank_tier and rank_tier > 0:
+            estimated_mmr = self._estimate_mmr_from_rank_tier(rank_tier)
+            if estimated_mmr > 0:
+                peak_mmr = max(peak_mmr, estimated_mmr)
         
         # Convert to rank name
         if peak_mmr > 0:
@@ -346,6 +348,29 @@ class DataProcessor:
             'mmr': peak_mmr,
             'rank_name': peak_rank_name
         }
+    
+    def _estimate_mmr_from_rank_tier(self, rank_tier: int) -> int:
+        """Estimate MMR from rank tier (rough approximation)"""
+        if rank_tier == 0:
+            return 0
+        elif 11 <= rank_tier <= 15:
+            return 154 * (rank_tier - 11) + 77
+        elif 21 <= rank_tier <= 25:
+            return 770 + 154 * (rank_tier - 21) + 77
+        elif 31 <= rank_tier <= 35:
+            return 1540 + 154 * (rank_tier - 31) + 77
+        elif 41 <= rank_tier <= 45:
+            return 2310 + 154 * (rank_tier - 41) + 77
+        elif 51 <= rank_tier <= 55:
+            return 3080 + 154 * (rank_tier - 51) + 77
+        elif 61 <= rank_tier <= 65:
+            return 3850 + 154 * (rank_tier - 61) + 77
+        elif 71 <= rank_tier <= 75:
+            return 4620 + 160 * (rank_tier - 71) + 80
+        elif rank_tier == 80:
+            return 5420
+        else:
+            return 0
     
     def _get_rank_name_from_tier(self, rank_tier: int) -> str:
         """Convert rank tier to rank name"""
