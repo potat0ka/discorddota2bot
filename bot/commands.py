@@ -114,11 +114,16 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Check if profile is private
-            if player_data.get('profile', {}).get('profilestate') != 1:
+            # Check if profile is private or has limited data
+            profile = player_data.get('profile', {})
+            profilestate = profile.get('profilestate')
+            
+            # If profilestate exists and is 0, it's definitely private
+            # If no profile data exists at all, it might also be private
+            if profilestate == 0 or (not profile.get('personaname') and profilestate != 1):
                 embed = discord.Embed(
                     title="⚠️ Private Profile",
-                    description="This Dota 2 profile is private. Please make it public on OpenDota to view match stats.",
+                    description="This Dota 2 profile appears to be private or has limited visibility. Please make it public on Steam and OpenDota to view match stats.",
                     color=discord.Color.orange()
                 )
                 await interaction.followup.send(embed=embed)
@@ -216,11 +221,18 @@ class DotaCommands(commands.Cog):
                 return
             
             # Check for private profiles
-            if (player1_data.get('profile', {}).get('profilestate') != 1 or 
-                player2_data.get('profile', {}).get('profilestate') != 1):
+            profile1 = player1_data.get('profile', {})
+            profile2 = player2_data.get('profile', {})
+            
+            profile1_private = (profile1.get('profilestate') == 0 or 
+                              (not profile1.get('personaname') and profile1.get('profilestate') != 1))
+            profile2_private = (profile2.get('profilestate') == 0 or 
+                              (not profile2.get('personaname') and profile2.get('profilestate') != 1))
+            
+            if profile1_private or profile2_private:
                 embed = discord.Embed(
                     title="⚠️ Private Profile(s)",
-                    description="One or both profiles are private. Please make them public on OpenDota to compare stats.",
+                    description="One or both profiles are private or have limited visibility. Please make them public on Steam and OpenDota to compare stats.",
                     color=discord.Color.orange()
                 )
                 await interaction.followup.send(embed=embed)
