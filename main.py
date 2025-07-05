@@ -13,7 +13,7 @@ from keep_alive import keep_alive
 from bot.commands import setup_commands
 from bot.database import SimpleDB
 from bot.rank_tracker import RankTracker
-from bot.api_client import OpenDotaClient
+from bot.hybrid_api_client import HybridAPIClient
 
 # Load environment variables
 load_dotenv()
@@ -39,7 +39,7 @@ class DotaBot(commands.Bot):
         )
         
         self.db = SimpleDB()
-        self.api_client = OpenDotaClient()
+        self.api_client = HybridAPIClient()
         self.rank_tracker = RankTracker(self.db, self.api_client)
     
     @tasks.loop(minutes=30)  # Check every 30 minutes

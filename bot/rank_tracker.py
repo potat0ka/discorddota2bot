@@ -5,7 +5,10 @@ Rank tracking and notification system for Dota 2 players
 import logging
 import asyncio
 from typing import Dict, List, Optional, Tuple
-from .api_client import OpenDotaClient
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .hybrid_api_client import HybridAPIClient
 from .database import SimpleDB
 
 logger = logging.getLogger(__name__)
@@ -13,7 +16,7 @@ logger = logging.getLogger(__name__)
 class RankTracker:
     """Tracks player ranks and detects rank changes"""
     
-    def __init__(self, db: SimpleDB, api_client: OpenDotaClient):
+    def __init__(self, db: SimpleDB, api_client):
         self.db = db
         self.api_client = api_client
         self.rank_tiers = {
