@@ -114,19 +114,23 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Check if profile is private - hybrid client provides better detection
+            # Check if we have sufficient data to display stats
             profile = player_data.get('profile', {})
-            steam_profile = player_data.get('steam_profile', {})
             
-            # Check Steam visibility state (3 = public, 1 = private)
-            steam_visibility = steam_profile.get('communityvisibilitystate', 0)
-            has_player_name = profile.get('personaname') or steam_profile.get('personaname')
+            # Only flag as private if we explicitly know it's private (profilestate = 0)
+            # or if we have absolutely no useful data
+            profile_state = profile.get('profilestate')
+            has_useful_data = (
+                profile.get('personaname') or 
+                profile.get('account_id') or 
+                player_data.get('steam_profile', {}).get('personaname')
+            )
             
-            # Profile is private if Steam says it's private OR no player data is available
-            if steam_visibility == 1 or (not has_player_name and steam_visibility != 3):
+            # Only show private warning if explicitly private or completely no data
+            if profile_state == 0 or (not has_useful_data and not recent_matches):
                 embed = discord.Embed(
-                    title="⚠️ Private Profile",
-                    description="This Dota 2 profile appears to be private or has limited visibility. Please make it public on Steam and OpenDota to view match stats.",
+                    title="⚠️ Private Profile or No Data",
+                    description="This profile appears to be private or has no available data. Make sure the Friend ID is correct and the profile is public on Steam.",
                     color=discord.Color.orange()
                 )
                 await interaction.followup.send(embed=embed)
@@ -223,19 +227,13 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Check for private profiles using hybrid data
+            # Check for private profiles - only flag if explicitly private or no data
             profile1 = player1_data.get('profile', {})
             profile2 = player2_data.get('profile', {})
-            steam1 = player1_data.get('steam_profile', {})
-            steam2 = player2_data.get('steam_profile', {})
             
-            # Check Steam visibility and player names
-            profile1_private = (steam1.get('communityvisibilitystate', 0) == 1 or 
-                              (not (profile1.get('personaname') or steam1.get('personaname')) 
-                               and steam1.get('communityvisibilitystate', 0) != 3))
-            profile2_private = (steam2.get('communityvisibilitystate', 0) == 1 or 
-                              (not (profile2.get('personaname') or steam2.get('personaname')) 
-                               and steam2.get('communityvisibilitystate', 0) != 3))
+            # Only consider private if profilestate is explicitly 0 or no matches available
+            profile1_private = (profile1.get('profilestate') == 0 or (not matches1 and not profile1.get('personaname')))
+            profile2_private = (profile2.get('profilestate') == 0 or (not matches2 and not profile2.get('personaname')))
             
             if profile1_private or profile2_private:
                 embed = discord.Embed(
