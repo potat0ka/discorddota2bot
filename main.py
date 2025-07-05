@@ -135,6 +135,28 @@ class DotaBot(commands.Bot):
             await ctx.send(embed=embed)
         except:
             pass
+    
+    async def on_app_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        """Handle application command errors"""
+        logger.error(f"App command error: {error}")
+        
+        # Check if interaction has already been responded to
+        if interaction.response.is_done():
+            return
+        
+        embed = discord.Embed(
+            title="❌ Error",
+            description="An error occurred while processing your command. Please try again.",
+            color=discord.Color.red()
+        )
+        
+        try:
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        except:
+            try:
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            except:
+                pass
 
 def main():
     """Main function to run the bot"""

@@ -74,19 +74,20 @@ class DotaCommands(commands.Cog):
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
         
+        # Validate friend ID first (before defer)
+        if not friend_id.isdigit():
+            embed = discord.Embed(
+                title="❌ Invalid Friend ID",
+                description="Please provide a valid Dota 2 Friend ID (numbers only).\n"
+                           "Example: `/dota 122994714`",
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        
         await interaction.response.defer()
         
         try:
-            # Validate friend ID
-            if not friend_id.isdigit():
-                embed = discord.Embed(
-                    title="❌ Invalid Friend ID",
-                    description="Please provide a valid Dota 2 Friend ID (numbers only).\n"
-                               "Example: `/dota 122994714`",
-                    color=discord.Color.red()
-                )
-                await interaction.followup.send(embed=embed)
-                return
             
             # OpenDota API uses account_id (Friend ID) directly
             steam_id = friend_id
@@ -182,19 +183,20 @@ class DotaCommands(commands.Cog):
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
         
+        # Validate friend IDs first (before defer)
+        if not friend_id1.isdigit() or not friend_id2.isdigit():
+            embed = discord.Embed(
+                title="❌ Invalid Friend IDs",
+                description="Please provide valid Dota 2 Friend IDs (numbers only).\n"
+                           "Example: `/compare 122994714 987654321`",
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        
         await interaction.response.defer()
         
         try:
-            # Validate friend IDs
-            if not friend_id1.isdigit() or not friend_id2.isdigit():
-                embed = discord.Embed(
-                    title="❌ Invalid Friend IDs",
-                    description="Please provide valid Dota 2 Friend IDs (numbers only).\n"
-                               "Example: `/compare 122994714 987654321`",
-                    color=discord.Color.red()
-                )
-                await interaction.followup.send(embed=embed)
-                return
             
             # OpenDota API uses account_id (Friend ID) directly
             steam_id1 = friend_id1
