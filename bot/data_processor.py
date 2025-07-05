@@ -75,8 +75,8 @@ class DataProcessor:
             # Hero streak detection
             hero_streak = self._detect_hero_streak(matches, account_id)
 
-            # Role suggestion
-            suggested_role = self._suggest_best_role(matches, account_id)
+            # Peak rank calculation
+            peak_rank_info = self._get_peak_rank(profile, mmr)
 
             # Overall win rate
             wins = sum(1 for match in matches if self._is_win(match, account_id))
@@ -87,6 +87,7 @@ class DataProcessor:
                 'avatar_url': avatar_url,
                 'current_mmr': mmr,
                 'rank_name': rank_name,
+                'peak_rank': peak_rank_info,
                 'first_match': first_match,
                 'today_match': today_match,
                 'today_matches_count': today_matches_count,
@@ -95,8 +96,7 @@ class DataProcessor:
                 'recent_pattern': recent_pattern,
                 'averages': averages,
                 'successful_hero': successful_hero,
-                'hero_streak': hero_streak,
-                'suggested_role': suggested_role
+                'hero_streak': hero_streak
             }
 
         except Exception as e:
@@ -309,29 +309,43 @@ class DataProcessor:
 
         return None
 
-    def _suggest_best_role(self, matches: List[Dict], steam_id: str) -> str:
-        """Suggest best role based on most played positions"""
-        lane_counts = {}
-
-        for match in matches:
-            lane = match.get('lane')
-            if lane:
-                lane_counts[lane] = lane_counts.get(lane, 0) + 1
-
-        if not lane_counts:
-            return "Unknown"
-
-        # Map lanes to roles
-        lane_to_role = {
-            1: "Safe Lane (Carry)",
-            2: "Mid Lane",
-            3: "Off Lane",
-            4: "Jungle",
-            5: "Roaming"
+    def _get_peak_rank(self, profile: Dict, current_mmr: int) -> Dict:
+        """Get peak rank information"""
+        # Try to get peak MMR from different sources
+        peak_mmr = 0
+        
+        # Check for leaderboard rank (Immortal players)
+        if profile.get('leaderboard_rank'):
+            peak_mmr = max(peak_mmr, 6000)  # Assume at least 6000 MMR for leaderboard
+        
+        # Check solo competitive rank
+        solo_rank = profile.get('solo_competitive_rank', 0)
+        if solo_rank:
+            peak_mmr = max(peak_mmr, solo_rank)
+        
+        # Check regular competitive rank
+        comp_rank = profile.get('competitive_rank', 0)
+        if comp_rank:
+            peak_mmr = max(peak_mmr, comp_rank)
+        
+        # Use current MMR as fallback
+        if peak_mmr == 0:
+            peak_mmr = current_mmr
+        
+        # Ensure peak is at least current MMR
+        peak_mmr = max(peak_mmr, current_mmr)
+        
+        # Convert to rank name
+        if peak_mmr > 0:
+            peak_rank_tier = self._mmr_to_rank_tier(peak_mmr)
+            peak_rank_name = self._get_rank_name_from_tier(peak_rank_tier)
+        else:
+            peak_rank_name = "Unranked"
+        
+        return {
+            'mmr': peak_mmr,
+            'rank_name': peak_rank_name
         }
-
-        most_played_lane = max(lane_counts, key=lane_counts.get)
-        return lane_to_role.get(most_played_lane, "Versatile")
     
     def _get_rank_name_from_tier(self, rank_tier: int) -> str:
         """Convert rank tier to rank name"""
@@ -347,6 +361,27 @@ class DataProcessor:
             80: "Immortal"
         }
         return rank_names.get(rank_tier, f"Rank {rank_tier}")
+    
+    def _mmr_to_rank_tier(self, mmr: int) -> int:
+        """Convert MMR to approximate rank tier"""
+        if mmr == 0:
+            return 0
+        elif mmr < 770:
+            return 11 + min(4, mmr // 154)  # Herald 1-5
+        elif mmr < 1540:
+            return 21 + min(4, (mmr - 770) // 154)  # Guardian 1-5
+        elif mmr < 2310:
+            return 31 + min(4, (mmr - 1540) // 154)  # Crusader 1-5
+        elif mmr < 3080:
+            return 41 + min(4, (mmr - 2310) // 154)  # Archon 1-5
+        elif mmr < 3850:
+            return 51 + min(4, (mmr - 3080) // 154)  # Legend 1-5
+        elif mmr < 4620:
+            return 61 + min(4, (mmr - 3850) // 154)  # Ancient 1-5
+        elif mmr < 5420:
+            return 71 + min(4, (mmr - 4620) // 160)  # Divine 1-5
+        else:
+            return 80  # Immortal
     
     def _get_today_matches_count(self, matches: List[Dict]) -> int:
         """Count matches played today"""

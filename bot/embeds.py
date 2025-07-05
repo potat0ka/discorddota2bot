@@ -157,13 +157,22 @@ class EmbedBuilder:
                 inline=True
             )
         
-        # Suggested role
-        suggested_role = stats.get('suggested_role', 'Unknown')
-        embed.add_field(
-            name="🎯 Suggested Role",
-            value=f"**{suggested_role}**",
-            inline=True
-        )
+        # Peak rank
+        peak_rank = stats.get('peak_rank', {})
+        if peak_rank and peak_rank.get('mmr', 0) > 0:
+            peak_mmr = peak_rank.get('mmr', 0)
+            peak_rank_name = peak_rank.get('rank_name', 'Unknown')
+            embed.add_field(
+                name="🏆 Peak Rank",
+                value=f"**{peak_rank_name}**\n**Peak MMR:** {peak_mmr:,}",
+                inline=True
+            )
+        else:
+            embed.add_field(
+                name="🏆 Peak Rank",
+                value="**No peak data available**",
+                inline=True
+            )
         
         # Hero streak
         hero_streak = stats.get('hero_streak')
