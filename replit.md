@@ -98,6 +98,7 @@ This repository contains a comprehensive Discord bot for fetching and displaying
 
 ## Changelog
 - July 05, 2025. Initial setup
+- July 05, 2025. Added Docker deployment section to README.md with comprehensive instructions
 
 ## User Preferences
 
