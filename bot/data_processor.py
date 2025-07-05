@@ -42,12 +42,25 @@ class DataProcessor:
             profile = player_data.get('profile', {})
             player_name = profile.get('personaname', 'Unknown Player')
             avatar_url = profile.get('avatarfull', '')
-            mmr = profile.get('mmr_estimate', {}).get('estimate', 'Unknown')
-            rank = profile.get('rank', 'Unranked')
+            
+            # Extract MMR properly
+            mmr_estimate = profile.get('mmr_estimate', {})
+            if isinstance(mmr_estimate, dict) and 'estimate' in mmr_estimate:
+                mmr = mmr_estimate['estimate']
+            else:
+                mmr = profile.get('solo_competitive_rank') or profile.get('competitive_rank') or 0
+            
+            # Extract rank tier and convert to name
+            rank_tier = profile.get('rank_tier', 0)
+            if rank_tier and rank_tier > 0:
+                rank_name = self._get_rank_name_from_tier(rank_tier)
+            else:
+                rank_name = 'Unranked'
 
             # Process matches
             first_match = self._get_first_match(matches)
             today_match = self._get_today_first_match(matches)
+            today_matches_count = self._get_today_matches_count(matches)
             total_matches = len(matches)
 
             # Win/loss pattern for last 10 matches
@@ -72,10 +85,11 @@ class DataProcessor:
             return {
                 'player_name': player_name,
                 'avatar_url': avatar_url,
-                'mmr': mmr,
-                'rank': rank,
+                'current_mmr': mmr,
+                'rank_name': rank_name,
                 'first_match': first_match,
                 'today_match': today_match,
+                'today_matches_count': today_matches_count,
                 'total_matches': total_matches,
                 'win_rate': win_rate,
                 'recent_pattern': recent_pattern,
@@ -318,3 +332,30 @@ class DataProcessor:
 
         most_played_lane = max(lane_counts, key=lane_counts.get)
         return lane_to_role.get(most_played_lane, "Versatile")
+    
+    def _get_rank_name_from_tier(self, rank_tier: int) -> str:
+        """Convert rank tier to rank name"""
+        rank_names = {
+            0: "Unranked",
+            11: "Herald I", 12: "Herald II", 13: "Herald III", 14: "Herald IV", 15: "Herald V",
+            21: "Guardian I", 22: "Guardian II", 23: "Guardian III", 24: "Guardian IV", 25: "Guardian V",
+            31: "Crusader I", 32: "Crusader II", 33: "Crusader III", 34: "Crusader IV", 35: "Crusader V",
+            41: "Archon I", 42: "Archon II", 43: "Archon III", 44: "Archon IV", 45: "Archon V",
+            51: "Legend I", 52: "Legend II", 53: "Legend III", 54: "Legend IV", 55: "Legend V",
+            61: "Ancient I", 62: "Ancient II", 63: "Ancient III", 64: "Ancient IV", 65: "Ancient V",
+            71: "Divine I", 72: "Divine II", 73: "Divine III", 74: "Divine IV", 75: "Divine V",
+            80: "Immortal"
+        }
+        return rank_names.get(rank_tier, f"Rank {rank_tier}")
+    
+    def _get_today_matches_count(self, matches: List[Dict]) -> int:
+        """Count matches played today"""
+        today = datetime.now().date()
+        today_count = 0
+        
+        for match in matches:
+            match_date = datetime.fromtimestamp(match.get('start_time', 0)).date()
+            if match_date == today:
+                today_count += 1
+        
+        return today_count

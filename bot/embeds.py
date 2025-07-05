@@ -93,26 +93,44 @@ class EmbedBuilder:
                 inline=True
             )
         
-        # Today's first match
+        # Today's matches info
+        today_matches_count = stats.get('today_matches_count', 0)
         today_match = stats.get('today_match')
-        if today_match:
-            hero_name = self.get_hero_name(today_match.get('hero_id', 0))
-            result_emoji = "🟩" if today_match['result'] == 'Win' else "🟥"
-            
+        
+        if today_matches_count > 0:
+            if today_match:
+                hero_name = self.get_hero_name(today_match.get('hero_id', 0))
+                result_emoji = "🟩" if today_match['result'] == 'Win' else "🟥"
+                
+                embed.add_field(
+                    name="🌅 Today's Activity",
+                    value=f"**Games Played:** {today_matches_count}\n"
+                          f"**First Match:** {today_match['datetime']}\n"
+                          f"**Hero:** {hero_name}\n"
+                          f"**Result:** {result_emoji} {today_match['result']}",
+                    inline=True
+                )
+            else:
+                embed.add_field(
+                    name="🌅 Today's Activity",
+                    value=f"**Games Played:** {today_matches_count}",
+                    inline=True
+                )
+        else:
             embed.add_field(
-                name="🌅 Today's First Match",
-                value=f"**Time:** {today_match['datetime']}\n"
-                      f"**Hero:** {hero_name}\n"
-                      f"**Result:** {result_emoji} {today_match['result']}",
+                name="🌅 Today's Activity",
+                value="**Games Played:** 0\n*No matches played today*",
                 inline=True
             )
         
-        # Recent matches pattern
+        # Recent matches pattern with better spacing
         recent_pattern = stats.get('recent_pattern', '')
         if recent_pattern:
+            # Add spaces between match results for better visibility
+            spaced_pattern = ' '.join(recent_pattern)
             embed.add_field(
                 name="📈 Last 10 Matches",
-                value=f"{recent_pattern}",
+                value=f"{spaced_pattern}",
                 inline=False
             )
         
@@ -217,15 +235,18 @@ class EmbedBuilder:
             inline=False
         )
         
-        # Recent performance
+        # Recent performance with proper spacing
         pattern1 = player1.get('recent_pattern', '')
         pattern2 = player2.get('recent_pattern', '')
         
         if pattern1 and pattern2:
+            # Add spaces between match results for better visibility
+            spaced_pattern1 = ' '.join(pattern1)
+            spaced_pattern2 = ' '.join(pattern2)
             embed.add_field(
                 name="📈 Recent Performance (Last 10 Matches)",
-                value=f"**{player1.get('name', 'Player 1')}:** {pattern1}\n"
-                      f"**{player2.get('name', 'Player 2')}:** {pattern2}",
+                value=f"**{player1.get('name', 'Player 1')}:** {spaced_pattern1}\n"
+                      f"**{player2.get('name', 'Player 2')}:** {spaced_pattern2}",
                 inline=False
             )
         
