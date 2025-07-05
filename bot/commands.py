@@ -126,6 +126,9 @@ class DotaCommands(commands.Cog):
                 player_data.get('steam_profile', {}).get('personaname')
             )
             
+            # Fetch recent matches first to check data availability
+            recent_matches = await self.api_client.get_recent_matches(steam_id)
+            
             # Only show private warning if explicitly private or completely no data
             if profile_state == 0 or (not has_useful_data and not recent_matches):
                 embed = discord.Embed(
@@ -136,8 +139,7 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Fetch recent matches
-            recent_matches = await self.api_client.get_recent_matches(steam_id)
+            
             
             if not recent_matches:
                 embed = discord.Embed(
@@ -231,6 +233,10 @@ class DotaCommands(commands.Cog):
             profile1 = player1_data.get('profile', {})
             profile2 = player2_data.get('profile', {})
             
+            # Fetch recent matches for both players first
+            matches1 = await self.api_client.get_recent_matches(steam_id1)
+            matches2 = await self.api_client.get_recent_matches(steam_id2)
+            
             # Only consider private if profilestate is explicitly 0 or no matches available
             profile1_private = (profile1.get('profilestate') == 0 or (not matches1 and not profile1.get('personaname')))
             profile2_private = (profile2.get('profilestate') == 0 or (not matches2 and not profile2.get('personaname')))
@@ -244,9 +250,7 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Fetch recent matches for both players
-            matches1 = await self.api_client.get_recent_matches(steam_id1)
-            matches2 = await self.api_client.get_recent_matches(steam_id2)
+            
             
             if not matches1 or not matches2:
                 embed = discord.Embed(

@@ -69,11 +69,15 @@ class EmbedBuilder:
         # Basic stats
         total_matches = stats.get('total_matches', 0)
         win_rate = stats.get('win_rate', 0)
+        rank_name = stats.get('rank_name', 'Unranked')
+        current_mmr = stats.get('current_mmr', 0)
         
         embed.add_field(
             name="📊 Overview",
             value=f"**Total Matches:** {total_matches:,}\n"
-                  f"**Win Rate:** {win_rate:.1f}%",
+                  f"**Win Rate:** {win_rate:.1f}%\n"
+                  f"**Rank:** {rank_name}\n"
+                  f"**MMR:** {current_mmr:,}" if current_mmr > 0 else f"**Rank:** {rank_name}",
             inline=True
         )
         
@@ -114,12 +118,12 @@ class EmbedBuilder:
         
         # Averages
         averages = stats.get('averages', {})
-        if averages:
+        if averages and averages.get('gpm', 0) > 0:
             embed.add_field(
                 name="📊 Average Performance",
-                value=f"**GPM:** {averages.get('gpm', 0)}\n"
-                      f"**XPM:** {averages.get('xpm', 0)}\n"
-                      f"**KDA:** {averages.get('kda', 0)}",
+                value=f"**GPM:** {averages.get('gpm', 0):,}\n"
+                      f"**XPM:** {averages.get('xpm', 0):,}\n"
+                      f"**KDA:** {averages.get('kda', 0.0):.2f}",
                 inline=True
             )
         
