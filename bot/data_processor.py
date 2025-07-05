@@ -22,7 +22,7 @@ class DataProcessor:
             5: "Hard Support"
         }
     
-    async def process_player_stats(self, player_data: Dict, matches: List[Dict], steam_id: str) -> Dict:
+    async def process_player_stats(self, player_data: Dict, matches: List[Dict], account_id: str) -> Dict:
         """
         Process comprehensive player statistics
         
@@ -46,22 +46,22 @@ class DataProcessor:
             total_matches = len(matches)
             
             # Win/loss pattern for last 10 matches
-            recent_pattern = self._get_recent_win_loss_pattern(matches[:10], steam_id)
+            recent_pattern = self._get_recent_win_loss_pattern(matches[:10], account_id)
             
             # Calculate averages
             averages = self._calculate_averages(matches)
             
             # Most successful hero
-            successful_hero = self._get_most_successful_hero(matches, steam_id)
+            successful_hero = self._get_most_successful_hero(matches, account_id)
             
             # Hero streak detection
-            hero_streak = self._detect_hero_streak(matches, steam_id)
+            hero_streak = self._detect_hero_streak(matches, account_id)
             
             # Role suggestion
-            suggested_role = self._suggest_best_role(matches, steam_id)
+            suggested_role = self._suggest_best_role(matches, account_id)
             
             # Overall win rate
-            wins = sum(1 for match in matches if self._is_win(match, steam_id))
+            wins = sum(1 for match in matches if self._is_win(match, account_id))
             win_rate = (wins / total_matches * 100) if total_matches > 0 else 0
             
             return {
@@ -84,7 +84,7 @@ class DataProcessor:
     
     async def process_player_comparison(self, player1_data: Dict, player2_data: Dict, 
                                       matches1: List[Dict], matches2: List[Dict],
-                                      steam_id1: str, steam_id2: str) -> Dict:
+                                      account_id1: str, account_id2: str) -> Dict:
         """
         Process comparison between two players
         
@@ -108,19 +108,19 @@ class DataProcessor:
             player1_stats = {
                 'name': player1_name,
                 'total_matches': len(matches1),
-                'wins': sum(1 for match in matches1 if self._is_win(match, steam_id1)),
+                'wins': sum(1 for match in matches1 if self._is_win(match, account_id1)),
                 'averages': self._calculate_averages(matches1),
-                'recent_pattern': self._get_recent_win_loss_pattern(matches1[:10], steam_id1),
-                'successful_hero': self._get_most_successful_hero(matches1, steam_id1)
+                'recent_pattern': self._get_recent_win_loss_pattern(matches1[:10], account_id1),
+                'successful_hero': self._get_most_successful_hero(matches1, account_id1)
             }
             
             player2_stats = {
                 'name': player2_name,
                 'total_matches': len(matches2),
-                'wins': sum(1 for match in matches2 if self._is_win(match, steam_id2)),
+                'wins': sum(1 for match in matches2 if self._is_win(match, account_id2)),
                 'averages': self._calculate_averages(matches2),
-                'recent_pattern': self._get_recent_win_loss_pattern(matches2[:10], steam_id2),
-                'successful_hero': self._get_most_successful_hero(matches2, steam_id2)
+                'recent_pattern': self._get_recent_win_loss_pattern(matches2[:10], account_id2),
+                'successful_hero': self._get_most_successful_hero(matches2, account_id2)
             }
             
             # Calculate win rates
@@ -182,7 +182,7 @@ class DataProcessor:
                 pattern += "🟥"
         return pattern
     
-    def _is_win(self, match: Dict, steam_id: str) -> bool:
+    def _is_win(self, match: Dict, account_id: str) -> bool:
         """Check if match was a win for the player"""
         player_slot = match.get('player_slot', 0)
         radiant_win = match.get('radiant_win', False)

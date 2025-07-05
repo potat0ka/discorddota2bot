@@ -88,8 +88,8 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Convert to 64-bit Steam ID for OpenDota API
-            steam_id = str(int(friend_id) + 76561197960265728)
+            # OpenDota API uses account_id (Friend ID) directly
+            steam_id = friend_id
             
             # Fetch player data
             player_data = await self.api_client.get_player_data(steam_id)
@@ -196,9 +196,9 @@ class DotaCommands(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             
-            # Convert to 64-bit Steam IDs
-            steam_id1 = str(int(friend_id1) + 76561197960265728)
-            steam_id2 = str(int(friend_id2) + 76561197960265728)
+            # OpenDota API uses account_id (Friend ID) directly
+            steam_id1 = friend_id1
+            steam_id2 = friend_id2
             
             # Fetch data for both players
             player1_data = await self.api_client.get_player_data(steam_id1)

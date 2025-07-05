@@ -47,54 +47,54 @@ class OpenDotaClient:
             logger.error(f"Request error: {e} - {url}")
             return None
     
-    async def get_player_data(self, steam_id: str) -> Optional[Dict]:
+    async def get_player_data(self, account_id: str) -> Optional[Dict]:
         """
         Get player profile data
         
         Args:
-            steam_id: 64-bit Steam ID
+            account_id: Dota 2 Friend ID (account_id)
             
         Returns:
             Player data dictionary or None if not found
         """
-        return await self._make_request(f"players/{steam_id}")
+        return await self._make_request(f"players/{account_id}")
     
-    async def get_recent_matches(self, steam_id: str, limit: int = 50) -> Optional[List[Dict]]:
+    async def get_recent_matches(self, account_id: str, limit: int = 50) -> Optional[List[Dict]]:
         """
         Get recent matches for a player
         
         Args:
-            steam_id: 64-bit Steam ID
+            account_id: Dota 2 Friend ID (account_id)
             limit: Number of matches to fetch
             
         Returns:
             List of match dictionaries or None if not found
         """
-        return await self._make_request(f"players/{steam_id}/matches?limit={limit}")
+        return await self._make_request(f"players/{account_id}/matches?limit={limit}")
     
-    async def get_player_wl(self, steam_id: str) -> Optional[Dict]:
+    async def get_player_wl(self, account_id: str) -> Optional[Dict]:
         """
         Get player win/loss statistics
         
         Args:
-            steam_id: 64-bit Steam ID
+            account_id: Dota 2 Friend ID (account_id)
             
         Returns:
             Win/loss data dictionary or None if not found
         """
-        return await self._make_request(f"players/{steam_id}/wl")
+        return await self._make_request(f"players/{account_id}/wl")
     
-    async def get_player_heroes(self, steam_id: str) -> Optional[List[Dict]]:
+    async def get_player_heroes(self, account_id: str) -> Optional[List[Dict]]:
         """
         Get player hero statistics
         
         Args:
-            steam_id: 64-bit Steam ID
+            account_id: Dota 2 Friend ID (account_id)
             
         Returns:
             List of hero statistics or None if not found
         """
-        return await self._make_request(f"players/{steam_id}/heroes")
+        return await self._make_request(f"players/{account_id}/heroes")
     
     async def get_heroes_data(self) -> Optional[List[Dict]]:
         """
