@@ -15,6 +15,123 @@ class SteamAPIClient:
     BASE_URL = "https://api.steampowered.com"
     
     def __init__(self):
+        self.session = None
+        self.api_key = os.getenv('STEAM_API_KEY')  # Optional, some endpoints work without it
+    
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create aiohttp session"""
+        if self.session is None or self.session.closed:
+            timeout = aiohttp.ClientTimeout(total=30)
+            self.session = aiohttp.ClientSession(timeout=timeout)
+        return self.session
+    
+    def friend_id_to_steam_id(self, friend_id: str) -> str:
+        """Convert 32-bit Friend ID to 64-bit Steam ID"""
+        return str(int(friend_id) + 76561197960265728)
+    
+    def steam_id_to_friend_id(self, steam_id: str) -> str:
+        """Convert 64-bit Steam ID to 32-bit Friend ID"""
+        return str(int(steam_id) - 76561197960265728)
+    
+    async def _make_request(self, endpoint: str, params: dict = None) -> Optional[Dict]:
+        """Make HTTP request to Steam API"""
+        url = f"{self.BASE_URL}/{endpoint}"
+        
+        if params is None:
+            params = {}
+        
+        # Add API key if available
+        if self.api_key:
+            params['key'] = self.api_key
+        
+        try:
+            session = await self._get_session()
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    logger.error(f"Steam API request failed: {response.status} - {url}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Steam API request error: {e} - {url}")
+            return None
+    
+    async def get_player_summaries(self, steam_id: str) -> Optional[Dict]:
+        """Get player profile summary"""
+        if not self.api_key:
+            logger.warning("Steam API key not available, skipping player summaries")
+            return None
+        
+        result = await self._make_request(
+            "ISteamUser/GetPlayerSummaries/v0002/",
+            {"steamids": steam_id}
+        )
+        
+        if result and 'response' in result and 'players' in result['response']:
+            players = result['response']['players']
+            return players[0] if players else None
+        
+        return None
+    
+    async def get_dota_match_history(self, steam_id: str, limit: int = 50) -> Optional[List[Dict]]:
+        """Get Dota 2 match history"""
+        if not self.api_key:
+            logger.warning("Steam API key not available, skipping match history")
+            return None
+        
+        account_id = self.steam_id_to_friend_id(steam_id)
+        
+        result = await self._make_request(
+            "IDOTA2Match_570/GetMatchHistory/v1/",
+            {
+                "account_id": account_id,
+                "matches_requested": min(limit, 100)
+            }
+        )
+        
+        if result and 'result' in result and 'matches' in result['result']:
+            return result['result']['matches']
+        
+        return None
+    
+    async def get_dota_match_details(self, match_id: str) -> Optional[Dict]:
+        """Get detailed match information"""
+        if not self.api_key:
+            logger.warning("Steam API key not available, skipping match details")
+            return None
+        
+        result = await self._make_request(
+            "IDOTA2Match_570/GetMatchDetails/v1/",
+            {"match_id": match_id}
+        )
+        
+        if result and 'result' in result:
+            return result['result']
+        
+        return None
+    
+    async def get_dota_heroes(self) -> Optional[List[Dict]]:
+        """Get all Dota 2 heroes"""
+        result = await self._make_request("IEconDOTA2_570/GetHeroes/v1/")
+        
+        if result and 'result' in result and 'heroes' in result['result']:
+            return result['result']['heroes']
+        
+        return None
+    
+    async def close(self):
+        """Close the aiohttp session"""
+        if self.session and not self.session.closed:
+            await self.session.close()
+
+class SteamAPIClient:
+    """Client for interacting with Steam Web API"""
+    
+    BASE_URL = "https://api.steampowered.com"
+    
+    def __init__(self):
         self.api_key = os.getenv('STEAM_API_KEY')
         self.session = None
         
